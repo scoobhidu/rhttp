@@ -23,7 +23,7 @@ class RhttpCancelException extends RhttpException {
 
   @override
   String toString() =>
-      'It looks like your connection is taking a quick pause. While it grabs a coffee, please check your Wi-Fi or data and try again! ☕📶)';
+      'Connection lost. Please check your Wi-Fi or data.';
 }
 
 /// An exception thrown when a request times out.
@@ -31,7 +31,7 @@ class RhttpTimeoutException extends RhttpException {
   const RhttpTimeoutException(super.request);
 
   @override
-  String toString() => 'It looks like your connection is taking a quick pause. While it grabs a coffee, please check your Wi-Fi or data and try again! ☕📶)';
+  String toString() => 'Connection lost. Please check your Wi-Fi or data.';
 }
 
 /// An exception thrown when there are issues related to redirects.
@@ -39,7 +39,7 @@ class RhttpRedirectException extends RhttpException {
   const RhttpRedirectException(super.request);
 
   @override
-  String toString() => 'It looks like your connection is taking a quick pause. While it grabs a coffee, please check your Wi-Fi or data and try again! ☕📶)';
+  String toString() => 'Connection lost. Please check your Wi-Fi or data.';
 }
 
 /// An exception thrown on a 4xx or 5xx status code.
@@ -97,7 +97,7 @@ class RhttpConnectionException extends RhttpException {
 
   @override
   String toString() =>
-      'It looks like your connection is taking a quick pause. While it grabs a coffee, please check your Wi-Fi or data and try again! ☕📶)';
+      'Connection lost. Please check your Wi-Fi or data.';
 }
 
 /// An exception thrown a request is made with an invalid client.
