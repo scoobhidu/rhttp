@@ -70,7 +70,7 @@ class RhttpStatusCodeException extends RhttpException {
 
   @override
   String toString() =>
-      'An unknown error occurred. Please try again later.';
+      'We\'re unable to process your request at the moment. Please try again later.';
 }
 
 /// An exception thrown when the server's certificate is invalid.
@@ -85,7 +85,7 @@ class RhttpInvalidCertificateException extends RhttpException {
 
   @override
   String toString() =>
-      'An unknown error occurred. Please try again later.';
+      'We\'re unable to process your request at the moment. Please try again later.';
 }
 
 /// An exception thrown when a connection error occurs.
@@ -106,7 +106,7 @@ class RhttpClientDisposedException extends RhttpException {
 
   @override
   String toString() =>
-      'An unknown issue has occurred. Please try your request again shortly.';
+      'We\'re unable to process your request at the moment. Please try again later.';
 }
 
 /// An exception thrown by an interceptor.
@@ -117,7 +117,7 @@ class RhttpInterceptorException extends RhttpException {
   RhttpInterceptorException(super.request, this.error);
 
   @override
-  String toString() => 'An unknown issue has occurred. Please try your request again shortly.';
+  String toString() => 'We\'re unable to process your request at the moment. Please try again later.';
 }
 
 /// An exception thrown when an unknown error occurs.
