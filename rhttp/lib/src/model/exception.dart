@@ -128,7 +128,7 @@ class RhttpUnknownException extends RhttpException {
   const RhttpUnknownException(super.request, this.message);
 
   @override
-  String toString() => 'This is unusual, but we've encountered an unexpected problem. Please try again in a moment.';
+  String toString() => 'This is unusual, but we\'ve encountered an unexpected problem. Please try again in a moment.';
 }
 
 @internal
