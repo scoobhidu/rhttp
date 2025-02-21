@@ -23,7 +23,7 @@ class RhttpCancelException extends RhttpException {
 
   @override
   String toString() =>
-      'Connection lost. Please check your Wi-Fi or data.';
+      'Connection lost. Please check your Wi-Fi or data connection and try again.';
 }
 
 /// An exception thrown when a request times out.
@@ -31,7 +31,7 @@ class RhttpTimeoutException extends RhttpException {
   const RhttpTimeoutException(super.request);
 
   @override
-  String toString() => 'Connection lost. Please check your Wi-Fi or data.';
+  String toString() => 'Connection lost. Please check your Wi-Fi or data connection and try again.';
 }
 
 /// An exception thrown when there are issues related to redirects.
@@ -39,7 +39,7 @@ class RhttpRedirectException extends RhttpException {
   const RhttpRedirectException(super.request);
 
   @override
-  String toString() => 'Connection lost. Please check your Wi-Fi or data.';
+  String toString() => 'Connection lost. Please check your Wi-Fi or data connection and try again.';
 }
 
 /// An exception thrown on a 4xx or 5xx status code.
@@ -70,7 +70,7 @@ class RhttpStatusCodeException extends RhttpException {
 
   @override
   String toString() =>
-      '[$runtimeType] Status code: $statusCode. URL: ${request.url}';
+      'An unknown error occurred. Please try again later.';
 }
 
 /// An exception thrown when the server's certificate is invalid.
@@ -85,7 +85,7 @@ class RhttpInvalidCertificateException extends RhttpException {
 
   @override
   String toString() =>
-      '[$runtimeType] Invalid certificate. $message URL: ${request.url}';
+      'An unknown error occurred. Please try again later.';
 }
 
 /// An exception thrown when a connection error occurs.
@@ -97,7 +97,7 @@ class RhttpConnectionException extends RhttpException {
 
   @override
   String toString() =>
-      'Connection lost. Please check your Wi-Fi or data.';
+      'Connection lost. Please check your Wi-Fi or data and try again later.';
 }
 
 /// An exception thrown a request is made with an invalid client.
@@ -106,7 +106,7 @@ class RhttpClientDisposedException extends RhttpException {
 
   @override
   String toString() =>
-      '[$runtimeType] Client is already disposed. URL: ${request.url}';
+      'An unknown issue has occurred. Please try your request again shortly.';
 }
 
 /// An exception thrown by an interceptor.
@@ -117,7 +117,7 @@ class RhttpInterceptorException extends RhttpException {
   RhttpInterceptorException(super.request, this.error);
 
   @override
-  String toString() => '[$runtimeType] $error. URL: ${request.url}';
+  String toString() => 'An unknown issue has occurred. Please try your request again shortly.';
 }
 
 /// An exception thrown when an unknown error occurs.
@@ -128,7 +128,7 @@ class RhttpUnknownException extends RhttpException {
   const RhttpUnknownException(super.request, this.message);
 
   @override
-  String toString() => '[$runtimeType] $message';
+  String toString() => 'This is unusual, but we've encountered an unexpected problem. Please try again in a moment.';
 }
 
 @internal
