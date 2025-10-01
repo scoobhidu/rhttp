@@ -82,7 +82,7 @@ class HttpBytesResponse extends HttpResponse {
 class HttpStreamResponse extends HttpResponse {
   Stream<Uint8List> body;
 
-  const HttpStreamResponse({
+  HttpStreamResponse({
     required super.remoteIp,
     required super.request,
     required super.version,
