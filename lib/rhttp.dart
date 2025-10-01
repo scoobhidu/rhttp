@@ -14,7 +14,7 @@ export 'src/interceptor/interceptor.dart'
         InterceptorResolveResult;
 export 'src/interceptor/sequential_interceptor.dart' show SequentialInterceptor;
 export 'src/interceptor/retry_interceptor.dart';
-export 'src/model/cancel_token.dart' show CancelToken;
+export 'src/model/cancel_token.dart' show CancelToken, CancelState;
 export 'src/model/exception.dart'
     show
         RhttpException,
@@ -54,6 +54,7 @@ export 'src/model/request.dart'
 export 'src/model/settings.dart'
     show
         ClientSettings,
+        CookieSettings,
         TimeoutSettings,
         ProxySettings,
         CustomProxy,

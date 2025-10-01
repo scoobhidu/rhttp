@@ -9,15 +9,20 @@ import 'package:rhttp/src/rust/api/http.dart' as rust;
 export 'package:rhttp/src/rust/api/client.dart' show TlsVersion;
 
 const _keepBaseUrl = '__rhttp_keep__';
+const _keepCookieSettings = CookieSettings.none();
 const _keepProxySettings = ProxySettings.noProxy();
 const _keepRedirectSettings = RedirectSettings.limited(-9999);
 const _keepTlsSettings = TlsSettings();
 const _keepDnsSettings = DnsSettings.static();
 const _keepTimeoutSettings = TimeoutSettings();
+const _keepUserAgent = '__rhttp_keep__';
 
 class ClientSettings {
   /// Base URL to be prefixed to all requests.
   final String? baseUrl;
+
+  /// Configuration options for cookie handling.
+  final CookieSettings? cookieSettings;
 
   /// The preferred HTTP version to use.
   final HttpVersionPref httpVersionPref;
@@ -42,8 +47,13 @@ class ClientSettings {
   /// DNS settings and resolver overrides.
   final DnsSettings? dnsSettings;
 
+  /// A convenient way to set the User-Agent header.
+  /// By default, there is no User-Agent header.
+  final String? userAgent;
+
   const ClientSettings({
     this.baseUrl,
+    this.cookieSettings,
     this.httpVersionPref = HttpVersionPref.all,
     this.timeoutSettings,
     this.throwOnStatusCode = true,
@@ -51,10 +61,12 @@ class ClientSettings {
     this.redirectSettings,
     this.tlsSettings,
     this.dnsSettings,
+    this.userAgent,
   });
 
   ClientSettings copyWith({
     String? baseUrl = _keepBaseUrl,
+    CookieSettings? cookieSettings = _keepCookieSettings,
     HttpVersionPref? httpVersionPref,
     TimeoutSettings? timeoutSettings = _keepTimeoutSettings,
     bool? throwOnStatusCode,
@@ -62,9 +74,13 @@ class ClientSettings {
     RedirectSettings? redirectSettings = _keepRedirectSettings,
     TlsSettings? tlsSettings = _keepTlsSettings,
     DnsSettings? dnsSettings = _keepDnsSettings,
+    String? userAgent = _keepUserAgent,
   }) {
     return ClientSettings(
       baseUrl: identical(baseUrl, _keepBaseUrl) ? this.baseUrl : baseUrl,
+      cookieSettings: identical(cookieSettings, _keepCookieSettings)
+          ? this.cookieSettings
+          : cookieSettings,
       httpVersionPref: httpVersionPref ?? this.httpVersionPref,
       timeoutSettings: identical(timeoutSettings, _keepTimeoutSettings)
           ? this.timeoutSettings
@@ -82,6 +98,35 @@ class ClientSettings {
       dnsSettings: identical(dnsSettings, _keepDnsSettings)
           ? this.dnsSettings
           : dnsSettings,
+      userAgent:
+          identical(userAgent, _keepUserAgent) ? this.userAgent : userAgent,
+    );
+  }
+}
+
+/// Cookie settings for the client.
+/// Used to configure Cookie handling.
+class CookieSettings {
+  /// Automatically store cookies sent with a
+  /// [Set-Cookie](https://mdn.io/docs/en-US/Headers/Set-Cookie) header.
+  ///
+  /// Uses the default Cookie
+  /// [`Jar`](https://docs.rs/reqwest/latest/reqwest/cookie/struct.Jar.html)
+  /// provided by reqwest.
+  final bool storeCookies;
+
+  const CookieSettings({this.storeCookies = true});
+
+  const CookieSettings._none() : storeCookies = false;
+
+  /// Disables any Cookie store and completly ignores Cookies.
+  const factory CookieSettings.none() = CookieSettings._none;
+
+  CookieSettings copyWith({
+    bool? storeCookies,
+  }) {
+    return CookieSettings(
+      storeCookies: storeCookies ?? this.storeCookies,
     );
   }
 }
@@ -326,6 +371,7 @@ class DynamicDnsSettings extends DnsSettings {
 extension ClientSettingsExt on ClientSettings {
   rust_client.ClientSettings toRustType() {
     return rust_client.ClientSettings(
+      cookieSettings: cookieSettings?._toRustType(),
       httpVersionPref: httpVersionPref._toRustType(),
       timeoutSettings: timeoutSettings?._toRustType(),
       throwOnStatusCode: throwOnStatusCode,
@@ -333,7 +379,14 @@ extension ClientSettingsExt on ClientSettings {
       redirectSettings: redirectSettings?._toRustType(),
       tlsSettings: tlsSettings?._toRustType(),
       dnsSettings: dnsSettings?._toRustType(),
+      userAgent: userAgent,
     );
+  }
+}
+
+extension on CookieSettings {
+  rust_client.CookieSettings _toRustType() {
+    return rust_client.CookieSettings(storeCookies: this.storeCookies);
   }
 }
 

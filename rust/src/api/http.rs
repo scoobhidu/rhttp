@@ -13,31 +13,13 @@ use crate::api::error::RhttpError;
 use crate::api::{error, stream};
 use crate::frb_generated::{RustAutoOpaque, StreamSink};
 
-pub enum HttpMethod {
-    Options,
-    Get,
-    Post,
-    Put,
-    Delete,
-    Head,
-    Trace,
-    Connect,
-    Patch,
+pub struct HttpMethod {
+    pub method: String,
 }
 
 impl HttpMethod {
     fn to_method(&self) -> Method {
-        match self {
-            HttpMethod::Options => Method::OPTIONS,
-            HttpMethod::Get => Method::GET,
-            HttpMethod::Post => Method::POST,
-            HttpMethod::Put => Method::PUT,
-            HttpMethod::Delete => Method::DELETE,
-            HttpMethod::Head => Method::HEAD,
-            HttpMethod::Trace => Method::TRACE,
-            HttpMethod::Connect => Method::CONNECT,
-            HttpMethod::Patch => Method::PATCH,
-        }
+        Method::from_bytes(self.method.as_bytes()).unwrap()
     }
 }
 
@@ -110,6 +92,7 @@ impl HttpVersion {
 }
 
 pub struct HttpResponse {
+    pub remote_ip: Option<String>,
     pub headers: Vec<(String, String)>,
     pub version: HttpVersion,
     pub status_code: u16,
@@ -221,6 +204,7 @@ async fn make_http_request_inner(
     .await?;
 
     Ok(HttpResponse {
+        remote_ip: extract_ip(&response),
         headers: header_to_vec(response.headers()),
         version: HttpVersion::from_version(response.version()),
         status_code: response.status().as_u16(),
@@ -323,6 +307,7 @@ async fn make_http_request_receive_stream_inner(
     };
 
     let http_response = HttpResponse {
+        remote_ip: extract_ip(&response),
         headers: header_to_vec(response.headers()),
         version: HttpVersion::from_version(response.version()),
         status_code: response.status().as_u16(),
@@ -530,4 +515,8 @@ fn header_to_vec(headers: &reqwest::header::HeaderMap) -> Vec<(String, String)> 
 
 pub fn cancel_request(token: &CancellationToken) {
     token.cancel();
+}
+
+fn extract_ip(response: &Response) -> Option<String> {
+    response.remote_addr().map(|addr| addr.ip().to_string())
 }

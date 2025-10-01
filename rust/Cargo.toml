@@ -7,18 +7,19 @@ edition = "2021"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-chrono = "0.4.39"
-flutter_rust_bridge = { version = "=2.7.1", features = ["chrono"] }
+chrono = "0.4.41"
+flutter_rust_bridge = { version = "=2.11.1", features = ["chrono"] }
 futures-util = "0.3.31"
-tokio = { version = "1.43.0", features = ["full"] }
-tokio-util = "0.7.12"
+tokio = { version = "1.46.1", features = ["full"] }
+tokio-util = "0.7.15"
 
 [dependencies.reqwest]
 component = { path = "../reqwest" }
-version = "0.12.12"
+version = "0.12.22"
 default-features = false
 features = [
     "charset",
+    "cookies",
     "http2",
     "http3",
     "rustls-tls-webpki-roots",
@@ -30,6 +31,9 @@ features = [
     "brotli",
     "gzip",
 ]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
 [profile.release]
 opt-level = 3

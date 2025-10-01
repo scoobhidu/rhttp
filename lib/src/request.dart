@@ -78,10 +78,7 @@ Future<HttpResponse> requestInternalGeneric(HttpRequest request) async {
   }
 
   HttpHeaders? headers = request.headers;
-  headers = _digestHeaders(
-    headers: headers,
-    body: request.body,
-  );
+  headers = _digestHeaders(headers: headers, body: request.body);
 
   // Convert the Dart stream to a Dart2Rust stream
   final requestBodyStream = switch (request.body) {
@@ -102,9 +99,7 @@ Future<HttpResponse> requestInternalGeneric(HttpRequest request) async {
         convertBackToBytes = false;
         break;
       case HttpExpectBody.bytes:
-        request = request.copyWith(
-          expectBody: HttpExpectBody.stream,
-        );
+        request = request.copyWith(expectBody: HttpExpectBody.stream);
         receiveNotifier = ProgressNotifier(request.onReceiveProgress!);
         convertBackToBytes = true;
         break;
@@ -112,9 +107,7 @@ Future<HttpResponse> requestInternalGeneric(HttpRequest request) async {
         receiveNotifier = null;
         convertBackToBytes = false;
         if (kDebugMode) {
-          print(
-            'Progress callback is not supported for ${request.expectBody}',
-          );
+          print('Progress callback is not supported for ${request.expectBody}');
         }
     }
   } else {
@@ -143,7 +136,8 @@ Future<HttpResponse> requestInternalGeneric(HttpRequest request) async {
         settings: request.settings?.toRustType(),
         method: request.method._toRustType(),
         url: url,
-        query: request.query?.entries.map((e) => (e.key, e.value)).toList(),
+        query: request.queryRaw ??
+            request.query?.entries.map((e) => (e.key, e.value)).toList(),
         headers: headers?._toRustType(),
         body: request.body?._toRustType(),
         bodyStream: requestBodyStream,
@@ -164,7 +158,7 @@ Future<HttpResponse> requestInternalGeneric(HttpRequest request) async {
       final cancelToken = request.cancelToken;
       if (cancelToken != null) {
         final cancelRef = await cancelRefCompleter.future;
-        cancelToken.setRef(cancelRef);
+        cancelToken.addRef(cancelRef);
       }
 
       final rustResponse = await responseCompleter.future;
@@ -174,9 +168,7 @@ Future<HttpResponse> requestInternalGeneric(HttpRequest request) async {
 
       if (receiveNotifier != null) {
         final contentLengthStr = rustResponse.headers
-                .firstWhereOrNull(
-                  (e) => e.$1.toLowerCase() == 'content-length',
-                )
+                .firstWhereOrNull((e) => e.$1.toLowerCase() == 'content-length')
                 ?.$2 ??
             '-1';
         final contentLength = int.tryParse(contentLengthStr) ?? -1;
@@ -219,6 +211,7 @@ Future<HttpResponse> requestInternalGeneric(HttpRequest request) async {
 
       if (convertBackToBytes) {
         response = HttpBytesResponse(
+          remoteIp: response.remoteIp,
           request: request,
           version: response.version,
           statusCode: response.statusCode,
@@ -265,7 +258,8 @@ Future<HttpResponse> requestInternalGeneric(HttpRequest request) async {
         settings: request.settings?.toRustType(),
         method: request.method._toRustType(),
         url: url,
-        query: request.query?.entries.map((e) => (e.key, e.value)).toList(),
+        query: request.queryRaw ??
+            request.query?.entries.map((e) => (e.key, e.value)).toList(),
         headers: headers?._toRustType(),
         body: request.body?._toRustType(),
         bodyStream: requestBodyStream,
@@ -277,15 +271,12 @@ Future<HttpResponse> requestInternalGeneric(HttpRequest request) async {
       final cancelToken = request.cancelToken;
       if (cancelToken != null) {
         final cancelRef = await cancelRefCompleter.future;
-        cancelToken.setRef(cancelRef);
+        cancelToken.addRef(cancelRef);
       }
 
       final rustResponse = await responseFuture;
 
-      HttpResponse response = parseHttpResponse(
-        request,
-        rustResponse,
-      );
+      HttpResponse response = parseHttpResponse(request, rustResponse);
 
       profile?.trackResponse(response);
 
@@ -325,9 +316,7 @@ Future<HttpResponse> requestInternalGeneric(HttpRequest request) async {
             body: exception.body,
           );
         } else {
-          profile.trackError(
-            error: e.toString(),
-          );
+          profile.trackError(error: e.toString());
         }
       }
 
@@ -386,10 +375,7 @@ HttpHeaders? _addHeaderIfNotExists({
   required String value,
 }) {
   if (headers == null || !headers.containsKey(name)) {
-    return (headers ?? HttpHeaders.empty).copyWith(
-      name: name,
-      value: value,
-    );
+    return (headers ?? HttpHeaders.empty).copyWith(name: name, value: value);
   }
   return headers;
 }
@@ -425,17 +411,7 @@ Future<rust_stream.Dart2RustStreamReceiver> _createDart2RustStream({
 
 extension on HttpMethod {
   rust.HttpMethod _toRustType() {
-    return switch (this) {
-      HttpMethod.options => rust.HttpMethod.options,
-      HttpMethod.get => rust.HttpMethod.get_,
-      HttpMethod.post => rust.HttpMethod.post,
-      HttpMethod.put => rust.HttpMethod.put,
-      HttpMethod.delete => rust.HttpMethod.delete,
-      HttpMethod.head => rust.HttpMethod.head,
-      HttpMethod.trace => rust.HttpMethod.trace,
-      HttpMethod.connect => rust.HttpMethod.connect,
-      HttpMethod.patch => rust.HttpMethod.patch,
-    };
+    return rust.HttpMethod(method: value);
   }
 }
 
@@ -459,23 +435,24 @@ extension on HttpBody {
       HttpBodyBytes bytes => rust.HttpBody.bytes(bytes.bytes),
       HttpBodyBytesStream _ => const rust.HttpBody.bytesStream(),
       HttpBodyForm form => rust.HttpBody.form(form.form),
-      HttpBodyMultipart multipart =>
-        rust.HttpBody.multipart(rust.MultipartPayload(
-          parts: multipart.parts.map((e) {
-            final name = e.$1;
-            final item = e.$2;
-            final rustItem = rust.MultipartItem(
-              value: switch (item) {
-                MultiPartText() => rust.MultipartValue.text(item.text),
-                MultiPartBytes() => rust.MultipartValue.bytes(item.bytes),
-                MultiPartFile() => rust.MultipartValue.file(item.file),
-              },
-              fileName: item.fileName,
-              contentType: item.contentType,
-            );
-            return (name, rustItem);
-          }).toList(),
-        )),
+      HttpBodyMultipart multipart => rust.HttpBody.multipart(
+          rust.MultipartPayload(
+            parts: multipart.parts.map((e) {
+              final name = e.$1;
+              final item = e.$2;
+              final rustItem = rust.MultipartItem(
+                value: switch (item) {
+                  MultiPartText() => rust.MultipartValue.text(item.text),
+                  MultiPartBytes() => rust.MultipartValue.bytes(item.bytes),
+                  MultiPartFile() => rust.MultipartValue.file(item.file),
+                },
+                fileName: item.fileName,
+                contentType: item.contentType,
+              );
+              return (name, rustItem);
+            }).toList(),
+          ),
+        ),
     };
   }
 }

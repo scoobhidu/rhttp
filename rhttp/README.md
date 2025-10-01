@@ -8,15 +8,18 @@ Make HTTP requests using Rust for Flutter developers.
 
 ## About
 
+This package is a Dart wrapper around the [reqwest](https://crates.io/crates/reqwest) crate, which is a fast and reliable HTTP client for Rust.
+For optimal performance, we use FFI with [flutter_rust_bridge](https://pub.dev/packages/flutter_rust_bridge) to call Rust code.
+
 The default HTTP client in Dart is part of `dart:io`, which lacks configurability and performance compared to other HTTP clients.
 Furthermore, HTTP/2 and HTTP/3 are either missing or not supported by default.
-This package uses FFI with [flutter_rust_bridge](https://pub.dev/packages/flutter_rust_bridge) to call Rust code. This allows you to use a faster and more efficient HTTP client.
-On Rust's side, the [reqwest](https://crates.io/crates/reqwest) crate is used to make the requests.
 
-Why shouldn't I use [cronet_http](https://pub.dev/packages/cronet_http) or [cupertino_http](https://pub.dev/packages/cupertino_http)?
-These packages for instance only support Android or iOS, while rhttp supports all platforms (except web currently) with a single configuration.
+Compared to [cronet_http](https://pub.dev/packages/cronet_http) and [cupertino_http](https://pub.dev/packages/cupertino_http), this package offers a unified, feature-rich API
+that also works on Windows and Linux.
 
 The APK size will increase by 2 MB on arm64 and 6 MB if compiled for all architectures (x64, arm32, arm64).
+
+Web is currently not supported.
 
 ## Features
 
@@ -28,6 +31,7 @@ The APK size will increase by 2 MB on arm64 and 6 MB if compiled for all archite
 - ✅ Certificate pinning
 - ✅ Proxy support
 - ✅ Custom DNS resolution
+- ✅ Cookies
 - ✅ Strong type safety
 - ✅ DevTools support ([Network tab](https://docs.flutter.dev/tools/devtools/network))
 - ✅ Compatible with [dart:io](https://api.dart.dev/stable/dart-io/HttpClient-class.html), [http](https://pub.dev/packages/http), and [dio](https://pub.dev/packages/dio)
@@ -71,6 +75,8 @@ Checkout the benchmark code [here](https://github.com/Tienisto/rhttp/tree/main/b
   - [Proxy](#-proxy)
   - [Redirects](#-redirects)
   - [DNS resolution](#-dns-resolution)
+  - [Cookies](#-cookies)
+  - [User-Agent](#-user-agent)
 - [Intercept](#intercept)
   - [Interceptors](#-interceptors)
   - [RetryInterceptor](#-retryinterceptor)
@@ -280,6 +286,18 @@ Uint8List body = response.body;
 HttpStreamResponse response = await Rhttp.getStream('https://example.com');
 Stream<Uint8List> body = response.body;
 ```
+
+They all extend the `HttpResponse` class, which contains the following properties:
+
+| Property                                  | Description                                                     |
+|-------------------------------------------|-----------------------------------------------------------------|
+| `String? remoteIp`                        | The remote IP address of the server that sent the response.     |
+| `HttpRequest request`                     | The HTTP request that this response is associated with.         |
+| `HttpVersion version`                     | The HTTP version of this response.                              |
+| `int statusCode`                          | The HTTP status code of this response.                          |
+| `List<(String, String)> headers`          | The HTTP headers of this response.                              |
+| `Map<String, String> headerMap`           | Response headers converted as a map.                            |
+| `Map<String, List<String>> headerMapList` | Response headers converted as a map respecting multiple values. |
 
 ## Request Lifecycle
 
@@ -645,6 +663,31 @@ final client = await RhttpClient.create(
 );
 ```
 
+### ➤ Cookies
+
+It is possible to optionally activate automatic Cookie handling. This will store Cookies sent by the
+server in an ephemeral Cookie [`Jar`](https://docs.rs/reqwest/latest/reqwest/cookie/struct.Jar.html).
+
+```dart
+final client = await RhttpClient.create(
+  settings: const ClientSettings(
+    cookieSettings: CookieSettings(storeCookies: true),
+  ),
+);
+```
+
+### ➤ User-Agent
+
+A convenient way to set the `User-Agent` header.
+
+```dart
+final client = await RhttpClient.create(
+  settings: const ClientSettings(
+    userAgent: 'MyApp/1.0',
+  ),
+);
+```
+
 ## Intercept
 
 ### ➤ Interceptors
@@ -784,8 +827,8 @@ thereby exposing the same API as the default HTTP client in the Dart ecosystem.
 
 This comes with some downsides, such as:
 
-- inferior type safety due to the flaw that `body` is of type `Object?` instead of a sane supertype.
-- body of type `Map` is implicitly interpreted as `x-www-form-urlencoded` that is only documented in StackOverflow (as of writing this).
+- inferior type safety due to the flaw that `body` is of type `Object?` instead of an explicit type
+- body of type `Map` is implicitly interpreted as `x-www-form-urlencoded` that cannot be changed
 - no support for cancellation
 
 ```dart
@@ -838,7 +881,7 @@ void main() async {
 
 MIT License
 
-Copyright (c) 2024 Tien Do Nam
+Copyright (c) 2024-2025 Tien Do Nam
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -1,6 +1,6 @@
 name: rhttp
 description: Make HTTP requests using Rust for Flutter developers. It uses FFI to call Rust functions from Dart. On the Rust side, it uses reqwest to make HTTP requests.
-version: 0.10.0
+version: 0.13.0
 repository: https://github.com/Tienisto/rhttp
 topics:
   - http
@@ -18,8 +18,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_rust_bridge: 2.7.1
-  freezed_annotation: ^2.4.4
+  flutter_rust_bridge: ^2.11.1
+  freezed_annotation: '>=2.4.4 <4.0.0'
   http: ^1.2.0
   http_profile: ^0.1.0
   meta: ^1.12.0
@@ -30,8 +30,8 @@ dev_dependencies:
   ffigen: ^11.0.0
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
-  freezed: ^2.0.0
+  flutter_lints: '>=3.0.0'
+  freezed: '>=2.0.0 <4.0.0'
   integration_test:
     sdk: flutter
   mocktail: ^1.0.4

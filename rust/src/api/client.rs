@@ -12,6 +12,7 @@ use std::sync::Arc;
 pub use tokio_util::sync::CancellationToken;
 
 pub struct ClientSettings {
+    pub cookie_settings: Option<CookieSettings>,
     pub http_version_pref: HttpVersionPref,
     pub timeout_settings: Option<TimeoutSettings>,
     pub throw_on_status_code: bool,
@@ -19,6 +20,11 @@ pub struct ClientSettings {
     pub redirect_settings: Option<RedirectSettings>,
     pub tls_settings: Option<TlsSettings>,
     pub dns_settings: Option<DnsSettings>,
+    pub user_agent: Option<String>,
+}
+
+pub struct CookieSettings {
+    pub store_cookies: bool,
 }
 
 pub enum ProxySettings {
@@ -56,7 +62,7 @@ pub struct TlsSettings {
     pub client_certificate: Option<ClientCertificate>,
     pub min_tls_version: Option<TlsVersion>,
     pub max_tls_version: Option<TlsVersion>,
-    pub sni: bool
+    pub sni: bool,
 }
 
 pub enum DnsSettings {
@@ -87,6 +93,7 @@ pub enum TlsVersion {
 impl Default for ClientSettings {
     fn default() -> Self {
         ClientSettings {
+            cookie_settings: None,
             http_version_pref: HttpVersionPref::All,
             timeout_settings: None,
             throw_on_status_code: true,
@@ -94,6 +101,7 @@ impl Default for ClientSettings {
             redirect_settings: None,
             tls_settings: None,
             dns_settings: None,
+            user_agent: None,
         }
     }
 }
@@ -138,6 +146,10 @@ fn create_client(settings: ClientSettings) -> Result<RequestClient, RhttpError> 
                     }
                 }
             }
+        }
+
+        if let Some(cookie_settings) = settings.cookie_settings {
+            client = client.cookie_store(cookie_settings.store_cookies);
         }
 
         if let Some(redirect_settings) = settings.redirect_settings {
@@ -280,6 +292,10 @@ fn create_client(settings: ClientSettings) -> Result<RequestClient, RhttpError> 
                     }));
                 }
             }
+        }
+
+        if let Some(user_agent) = settings.user_agent {
+            client = client.user_agent(user_agent);
         }
 
         client

@@ -1,3 +1,30 @@
+## 0.13.0
+
+- feat: add `HttpResponse.remoteIp` to get the remote IP address of the server
+- feat: set `forceSameCodegenVersion: false` to disable check by `flutter_rust_bridge`
+- deps: bump `flutter_rust_bridge` to `2.11.1`
+- deps: bump Rust dependencies to latest versions
+- docs: update Android example @FrankenApps (#78)
+
+## 0.12.0
+
+- fix: Flutter 3.32 compatibility @MSOB7YY (#74)
+- deps: bump `flutter_rust_bridge` to `2.10.0`
+
+## 0.11.1
+
+- feat: add basic Cookie handling @FrankenApps (#67)
+- feat: automatically install the pinned Rust version @linsui (#68)
+- deps: loosen `freezed_annotation` constraint to `>=2.4.4 <4.0.0`
+
+## 0.11.0
+
+- feat: `HttpMethod` accepts any string as method name @wgh136 (#57)
+- feat: add `ClientSettings.userAgent` @FrankenApps (#63)
+- fix: race condition leading to `ConcurrentModificationError` when using the same `CancelToken` for multiple requests
+- docs: add internet permission to example app
+- deps: bump `flutter_rust_bridge` to `2.9.0`
+
 ## 0.10.0
 
 - feat: use `rustls-tls-webpki-roots` to avoid errors with corrupted system setting
