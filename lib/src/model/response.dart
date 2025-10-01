@@ -64,9 +64,9 @@ class HttpBytesResponse extends HttpResponse {
 }
 
 class HttpStreamResponse extends HttpResponse {
-  final Stream<Uint8List> body;
+  Stream<Uint8List> body;
 
-  const HttpStreamResponse({
+  HttpStreamResponse({
     required super.request,
     required super.version,
     required super.statusCode,

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:meta/meta.dart';
 import 'package:rhttp/src/client/rhttp_client.dart';
 import 'package:rhttp/src/interceptor/interceptor.dart';
+import 'package:rhttp/src/interceptor/sequential_interceptor.dart';
 import 'package:rhttp/src/model/cancel_token.dart';
 import 'package:rhttp/src/model/header.dart';
 import 'package:rhttp/src/model/response.dart';
@@ -63,15 +64,15 @@ class BaseHttpRequest {
   final Map<String, dynamic> additionalData = {};
 
   BaseHttpRequest({
-    required this.method,
+    this.method = HttpMethod.get,
     required this.url,
-    required this.query,
-    required this.headers,
-    required this.body,
-    required this.expectBody,
-    required this.cancelToken,
-    required this.onSendProgress,
-    required this.onReceiveProgress,
+    this.query,
+    this.headers,
+    this.body,
+    this.expectBody = HttpExpectBody.stream,
+    this.cancelToken,
+    this.onSendProgress,
+    this.onReceiveProgress,
   });
 }
 
@@ -81,36 +82,32 @@ class HttpRequest extends BaseHttpRequest {
   final RhttpClient? client;
 
   /// The settings to use for the request.
-  /// This is **only** used if [client] is `null`.
   final ClientSettings? settings;
 
-  /// The settings to use for the request.
-  ClientSettings? get digestedSettings => client?.settings ?? settings;
-
   /// The interceptor to use for the request.
-  /// This can be a [QueuedInterceptor] if there are multiple interceptors.
+  /// This can be a [SequentialInterceptor] if there are multiple interceptors.
   final Interceptor? interceptor;
 
   HttpRequest({
-    required this.client,
-    required this.settings,
-    required this.interceptor,
-    required super.method,
+    this.client,
+    this.settings,
+    this.interceptor,
+    super.method,
     required super.url,
-    required super.query,
-    required super.headers,
-    required super.body,
-    required super.expectBody,
-    required super.cancelToken,
-    required super.onSendProgress,
-    required super.onReceiveProgress,
+    super.query,
+    super.headers,
+    super.body,
+    super.expectBody,
+    super.cancelToken,
+    super.onSendProgress,
+    super.onReceiveProgress,
   });
 
   factory HttpRequest.from({
     required BaseHttpRequest request,
-    required RhttpClient? client,
-    required ClientSettings? settings,
-    required Interceptor? interceptor,
+    RhttpClient? client,
+    ClientSettings? settings,
+    Interceptor? interceptor,
   }) =>
       HttpRequest(
         client: client,
