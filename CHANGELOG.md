@@ -1,3 +1,21 @@
+## 0.15.1
+
+- chore: migrate from GitHub to Codeberg: https://codeberg.org/Tienisto/rhttp
+
+## 0.15.0
+
+- fix: `RhttpCompatibleClient` should combine header values with the same key using comma as per `http` spec (#95)
+- fix: crash on non-UTF8 headers (#92)
+- deps: bump `freezed` to `^3.0.0`
+- deps: bump Rust dependencies to latest versions
+
+## 0.14.0
+
+- feat: `RhttpCompatibleClient` supports `Abortable` added in `http` v1.5.0
+- feat: support Android 16 KB memory page alignment requirement @sabin26 (#89)
+- feat: add `queryRaw` parameter @nrbnlulu (#86)
+- deps: bump Rust dependencies to latest versions
+
 ## 0.13.0
 
 - feat: add `HttpResponse.remoteIp` to get the remote IP address of the server

@@ -1,5 +1,7 @@
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:rhttp/src/client/rhttp_client.dart';
+import 'package:rhttp/src/model/request.dart';
 import 'package:rhttp/src/model/response.dart';
 import 'package:rhttp/src/rust/api/client.dart';
 import 'package:rhttp/src/rust/frb_generated.dart';
@@ -12,10 +14,12 @@ class MockRustLibApi extends Mock implements RustLibApi {
   MockRustLibApi.createAndRegister() {
     registerFallbackValue(rust_http.HttpMethod(method: "GET"));
     registerFallbackValue(rust_http.HttpExpectBody.text);
-    registerFallbackValue(const ClientSettings(
-      httpVersionPref: rust_http.HttpVersionPref.http11,
-      throwOnStatusCode: true,
-    ));
+    registerFallbackValue(
+      const ClientSettings(
+        httpVersionPref: rust_http.HttpVersionPref.http11,
+        throwOnStatusCode: true,
+      ),
+    );
     registerFallbackValue(FakeCancellationToken());
   }
 
@@ -50,24 +54,26 @@ class MockRustLibApi extends Mock implements RustLibApi {
         await Future.delayed(delay);
       }
       onAnswer?.call(invocation.namedArguments[#url]);
-      return Future.value(rust_http.HttpResponse(
-        remoteIp: null,
-        headers: headers ?? [],
-        version: switch (version ?? HttpVersion.http1_1) {
-          HttpVersion.http09 => rust_http.HttpVersion.http09,
-          HttpVersion.http1_0 => rust_http.HttpVersion.http10,
-          HttpVersion.http1_1 => rust_http.HttpVersion.http11,
-          HttpVersion.http2 => rust_http.HttpVersion.http2,
-          HttpVersion.http3 => rust_http.HttpVersion.http3,
-          HttpVersion.other => rust_http.HttpVersion.other,
-        },
-        statusCode: statusCode ?? 200,
-        body: switch (body) {
-          String() => rust_http.HttpResponseBody_Text(body),
-          Uint8List() => rust_http.HttpResponseBody_Bytes(body),
-          _ => throw 'Invalid body type',
-        },
-      ));
+      return Future.value(
+        rust_http.HttpResponse(
+          remoteIp: null,
+          headers: headers ?? [],
+          version: switch (version ?? HttpVersion.http1_1) {
+            HttpVersion.http09 => rust_http.HttpVersion.http09,
+            HttpVersion.http1_0 => rust_http.HttpVersion.http10,
+            HttpVersion.http1_1 => rust_http.HttpVersion.http11,
+            HttpVersion.http2 => rust_http.HttpVersion.http2,
+            HttpVersion.http3 => rust_http.HttpVersion.http3,
+            HttpVersion.other => rust_http.HttpVersion.other,
+          },
+          statusCode: statusCode ?? 200,
+          body: switch (body) {
+            String() => rust_http.HttpResponseBody_Text(body),
+            Uint8List() => rust_http.HttpResponseBody_Bytes(body),
+            _ => throw 'Invalid body type',
+          },
+        ),
+      );
     });
   }
 
@@ -94,8 +100,10 @@ class MockRustLibApi extends Mock implements RustLibApi {
     });
   }
 
-  void mockErrorResponse(
-      {void Function(String) onAnswer = _noop, Object? exception}) {
+  void mockErrorResponse({
+    void Function(String) onAnswer = _noop,
+    Object? exception,
+  }) {
     when<Future<rust_http.HttpResponse>>(
       () => crateApiHttpMakeHttpRequest(
         method: any(named: 'method'),
@@ -132,6 +140,49 @@ class MockRustLibApi extends Mock implements RustLibApi {
     });
   }
 }
+
+class MockRhttpClient extends Mock implements RhttpClient {
+  MockRhttpClient.createAndRegister() {
+    registerFallbackValue(HttpMethod.get);
+  }
+
+  void mockStreamResponse({
+    List<(String, String)>? headers,
+    int? statusCode,
+    Stream<Uint8List>? bodyStream,
+  }) {
+    when<Future<HttpStreamResponse>>(
+      () => requestStream(
+        method: any(named: 'method'),
+        url: any(named: 'url'),
+        query: any(named: 'query'),
+        queryRaw: any(named: 'queryRaw'),
+        headers: any(named: 'headers'),
+        body: any(named: 'body'),
+        cancelToken: any(named: 'cancelToken'),
+        onSendProgress: any(named: 'onSendProgress'),
+        onReceiveProgress: any(named: 'onReceiveProgress'),
+      ),
+    ).thenAnswer((invocation) {
+      return Future.value(
+        HttpStreamResponse(
+          remoteIp: null,
+          request: FakeRequest(),
+          version: HttpVersion.http1_1,
+          statusCode: statusCode ?? 200,
+          headers: headers ?? [],
+          body:
+              bodyStream ??
+              Stream<Uint8List>.fromIterable(
+                [Uint8List.fromList('Fake stream body'.codeUnits)],
+              ),
+        ),
+      );
+    });
+  }
+}
+
+class FakeRequest extends Fake implements HttpRequest {}
 
 class FakeHttpResponse extends Fake implements HttpTextResponse {
   @override
