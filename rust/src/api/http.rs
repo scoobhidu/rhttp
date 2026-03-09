@@ -141,7 +141,10 @@ pub async fn make_http_request(
     let cancel_tokens = build_cancel_tokens(client.clone());
 
     if cancelable {
-        on_cancel_token(cancel_tokens.request_cancel_token.clone()).await;
+        let _ = tokio::spawn(on_cancel_token(
+            cancel_tokens.request_cancel_token.clone(),
+        ))
+        .await;
     }
 
     tokio::select! {
@@ -244,17 +247,20 @@ pub async fn make_http_request_receive_stream(
     let cancel_tokens = build_cancel_tokens(client.clone());
 
     if cancelable {
-        on_cancel_token(cancel_tokens.request_cancel_token.clone()).await;
+        let _ = tokio::spawn(on_cancel_token(
+            cancel_tokens.request_cancel_token.clone(),
+        ))
+        .await;
     }
 
     tokio::select! {
         _ = cancel_tokens.request_cancel_token.cancelled() => {
             let _ = stream_sink.add_error(anyhow::anyhow!(error::STREAM_CANCEL_ERROR));
-            on_error(RhttpError::RhttpCancelError).await;
+            let _ = tokio::spawn(on_error(RhttpError::RhttpCancelError)).await;
         },
         _ = cancel_tokens.client_cancel_token.cancelled() => {
             let _ = stream_sink.add_error(anyhow::anyhow!(error::STREAM_CANCEL_ERROR));
-            on_error(RhttpError::RhttpCancelError).await;
+            let _ = tokio::spawn(on_error(RhttpError::RhttpCancelError)).await;
         },
         _ = make_http_request_receive_stream_inner(
             client,
@@ -301,7 +307,7 @@ async fn make_http_request_receive_stream_inner(
     let response: Response = match response {
         Ok(res) => res,
         Err(e) => {
-            on_error(e.clone()).await;
+            let _ = tokio::spawn(on_error(e.clone())).await;
             return;
         }
     };
@@ -314,7 +320,7 @@ async fn make_http_request_receive_stream_inner(
         body: HttpResponseBody::Stream,
     };
 
-    on_response(http_response).await;
+    let _ = tokio::spawn(on_response(http_response)).await;
 
     let mut stream = response.bytes_stream();
 
